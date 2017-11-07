@@ -101,5 +101,6 @@ public class ImagePickActivity extends AppCompatActivity {
         int px = windowWidth*point/240;
         textView.setTextSize(TypedValue.COMPLEX_UNIT_PX,px);
     }
+
 }
 
