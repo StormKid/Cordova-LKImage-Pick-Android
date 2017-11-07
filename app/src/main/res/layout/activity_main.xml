@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#f8f8f8"
+        android:id="@+id/pick_main"
+        style="@style/Theme.AppCompat.Light.NoActionBar"
+        >
+        <RelativeLayout android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:background="@android:color/white"
+        >
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:paddingLeft="20dp"
+                          android:paddingRight="20dp"
+                          android:paddingBottom="8dp"
+                          android:paddingTop="8dp"
+                          android:text="返回"
+                          android:id="@+id/title_cancel"
+                />
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:paddingLeft="20dp"
+                          android:paddingRight="20dp"
+                          android:paddingBottom="8dp"
+                          android:paddingTop="8dp"
+                          android:text="确定"
+                          android:layout_alignParentRight="true"
+                          android:id="@+id/title_ok"
+                />
+
+        </RelativeLayout>
+
+
+        <android.support.v7.widget.RecyclerView android:layout_width="match_parent"
+                                                android:id="@+id/file_list"
+                                                android:layout_height="match_parent">
+
+        </android.support.v7.widget.RecyclerView>
+
+
+
+</LinearLayout>
