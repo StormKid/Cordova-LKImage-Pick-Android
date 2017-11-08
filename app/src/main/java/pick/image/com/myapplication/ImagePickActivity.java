@@ -1,20 +1,14 @@
 package pick.image.com.myapplication;
 
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.TypedValue;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
-import java.io.Serializable;
 
 /**
  * 图片相册选择插件
@@ -54,8 +48,10 @@ public class ImagePickActivity extends AppCompatActivity {
      * 确定字体颜色
      */
     private  String OK_COLOR;
-
-
+    /**
+     *
+     */
+    private  int ITEM_SIZE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,15 +84,21 @@ public class ImagePickActivity extends AppCompatActivity {
 
 
     private void loadedView() {
+        OK_TEXT = TextUtils.isEmpty(OK_TEXT)?"确定":OK_TEXT;
+        CANCEL_TEXT = TextUtils.isEmpty(CANCEL_TEXT)?"返回":CANCEL_TEXT;
+        OK_COLOR = TextUtils.isEmpty(OK_COLOR)?"999999":OK_COLOR;
+        CANCEL_COLOR = TextUtils.isEmpty(CANCEL_COLOR)?"999999":CANCEL_COLOR;
+        BANNER_CORLOR = TextUtils.isEmpty(BANNER_CORLOR)?"ffffff":BANNER_CORLOR;
         getTextPx(MANAGER_TITLE_TEXT_SIZE,title_cancel);
         getTextPx(MANAGER_TITLE_TEXT_SIZE,title_ok);
-        title_ok.setTextColor(getColorParcelable(OK_COLOR));
-        title_cancel.setTextColor(getColorParcelable(CANCEL_COLOR));
+        title_ok.setTextColor(Utils.getColorParcelable(OK_COLOR));
+        title_cancel.setTextColor(Utils.getColorParcelable(CANCEL_COLOR));
         title_ok.setText(OK_TEXT);
         title_cancel.setText(CANCEL_TEXT);
-        pick_main.setBackgroundColor(getColorParcelable(BANNER_CORLOR));
+        pick_main.setBackgroundColor(Utils.getColorParcelable(BANNER_CORLOR));
         GridLayoutManager manager = new GridLayoutManager(this,3);
         file_list.setLayoutManager(manager);
+        file_list.setAdapter(new AlbumAdapter(this,0,null));
     }
 
     /**
@@ -108,31 +110,6 @@ public class ImagePickActivity extends AppCompatActivity {
         int windowWidth = Utils.getWindowWidth(this);
         int px = windowWidth*point/240;
         textView.setTextSize(TypedValue.COMPLEX_UNIT_PX,px);
-    }
-
-    /**
-     * 获取自定义颜色parse
-     * @param color
-     * @return
-     */
-    private  int getColorParcelable(String color){
-        String match = "[a-f0-9A-F]{6}";
-        String matchApache = "[a-f0-9A-F]{8}";
-        if (TextUtils.isEmpty(color))return Color.TRANSPARENT;
-        if (color.matches(match)||color.matches(matchApache)){
-            return  Color.parseColor("#"+color);
-        }else return Color.TRANSPARENT;
-    }
-
-
-
-
-
-    public   class  ViewHolder extends RecyclerView.ViewHolder{
-
-        public ViewHolder(View itemView) {
-            super(itemView);
-        }
     }
 
 
