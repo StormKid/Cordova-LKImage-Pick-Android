@@ -2,10 +2,12 @@ package pick.image.com.myapplication;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -20,17 +22,16 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
 
 
     private Context context;
-    private int ITEM_SIZE;
     private int ItemWidth;
     private int ItemHeight;
     private int checkWidth;
     private int checkHeight;
     private int margin_size;
+    private int itemTextSize;
     private List<ItemPhotoEntity> entityList;
 
-    public AlbumAdapter(Context context, int item_size, List<ItemPhotoEntity> entityList) {
+    public AlbumAdapter(Context context, List<ItemPhotoEntity> entityList) {
         this.context = context;
-        ITEM_SIZE = item_size;
         this.entityList = entityList;
     }
 
@@ -41,9 +42,14 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
+        final ItemPhotoEntity itemPhotoEntity = entityList.get(position);
+        boolean checked = itemPhotoEntity.isChecked();
+        if (checked) holder.check_box.setVisibility(View.VISIBLE);
+        else holder.check_box.setVisibility(View.GONE);
+        holder.itemView.setTag(checked);
         caculateItem();
-        RelativeLayout.LayoutParams itemParams =  new RelativeLayout.LayoutParams(ItemWidth,ItemHeight);
+        LinearLayout.LayoutParams itemParams =  new LinearLayout.LayoutParams(ItemWidth,ItemHeight);
         RelativeLayout.LayoutParams checkParams = new RelativeLayout.LayoutParams(checkWidth,checkHeight);
         checkParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         checkParams.setMargins(0,margin_size,margin_size,0);
@@ -51,12 +57,31 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
         holder.item_img.setLayoutParams(itemParams);
         holder.item_img.setImageResource(R.mipmap.ic_launcher);
         holder.check_box.setImageResource(R.mipmap.choose);
+        holder.item_name.setText("测试");
+        holder.item_name.setTextSize(TypedValue.COMPLEX_UNIT_PX,itemTextSize);
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean tag = v.getTag()==null?false:(boolean) v.getTag();
+                if (tag) {
+                    tag = false;
+                    v.setTag(tag);
+                    itemPhotoEntity.setChecked(tag);
+                }else {
+                    tag = true;
+                    v.setTag(tag);
+                    itemPhotoEntity.setChecked(tag);
+                }
+                entityList.set(position,itemPhotoEntity);
 
+                notifyDataSetChanged();
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return 10;
+        return entityList==null?0:entityList.size();
     }
 
     class  ViewHolder extends RecyclerView.ViewHolder{
@@ -79,8 +104,8 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
         int windowWidth = Utils.getWindowWidth(context);
         ItemHeight = ItemWidth = windowWidth*80/250;
         checkHeight = checkWidth = windowWidth/20;
-        ITEM_SIZE = ITEM_SIZE==0? windowWidth/25:ITEM_SIZE/240;
         margin_size = windowWidth/35;
+        itemTextSize = windowWidth/26;
     }
 
 

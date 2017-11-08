@@ -1,29 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="wrap_content"
-              android:orientation="vertical"
-              android:gravity="center"
-              android:layout_height="wrap_content">
-            <RelativeLayout android:layout_width="wrap_content"
-                            android:layout_height="wrap_content">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+    <LinearLayout android:layout_width="wrap_content"
+                  android:orientation="vertical"
+                  android:gravity="center_horizontal"
+                  android:layout_height="wrap_content">
 
+        <ImageView android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:id="@+id/item_img"
+        />
 
-            <ImageView android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:id="@+id/item_img"
-            />
-
-            <ImageView android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:id="@+id/check_box"
-                       android:layout_alignParentRight="true"
-            />
-            </RelativeLayout>
-
-            <TextView android:layout_width="wrap_content"
-                      android:layout_height="wrap_content"
-                      android:maxLength="1"
-                      android:ellipsize="end"
-                      android:id="@+id/item_name"
-            />
-</LinearLayout>
+        <TextView android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:maxLines="1"
+                  android:ellipsize="end"
+                  android:textColor="#666"
+                  android:id="@+id/item_name"
+        />
+    </LinearLayout>
+    <ImageView android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:id="@+id/check_box"
+    />
+</RelativeLayout>
