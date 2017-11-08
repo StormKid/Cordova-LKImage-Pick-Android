@@ -70,6 +70,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
     private void initListner() {
         title_ok.setOnClickListener(this);
         title_cancel.setOnClickListener(this);
+
     }
 
 
