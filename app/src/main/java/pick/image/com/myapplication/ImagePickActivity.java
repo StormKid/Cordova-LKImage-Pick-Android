@@ -114,7 +114,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         CANCEL_TEXT = intent.getStringExtra("cancel_text");
         CHCEK_IMG_RES = intent.getStringExtra("check_img_res");
         BANNER_CORLOR = intent.getStringExtra("banner_color");
-        MANAGER_TITLE_TEXT_SIZE = intent.getIntExtra("title_text_size", 9);
+        MANAGER_TITLE_TEXT_SIZE = intent.getIntExtra("title_text_size", 10);
         LIMIT_NUM = intent.getIntExtra("limit_num", 9);
         TYPE = ALBUM_TYPE;
     }
