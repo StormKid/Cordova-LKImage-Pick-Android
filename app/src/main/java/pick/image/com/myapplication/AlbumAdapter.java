@@ -61,6 +61,7 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
         final ItemPhotoEntity itemPhotoEntity = entityList.get(position);
         final String type = itemPhotoEntity.getType();
         boolean checked = itemPhotoEntity.isChecked();
+        final String name = itemPhotoEntity.getName();
         String path = itemPhotoEntity.getPath();
         if (checked) holder.check_box.setVisibility(View.VISIBLE);
         else holder.check_box.setVisibility(View.GONE);
@@ -79,7 +80,7 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
             Glide.with(context).load(path).into(holder.item_img);
         }
         holder.check_box.setImageResource(R.mipmap.choose);
-        holder.item_name.setText(itemPhotoEntity.getName());
+        holder.item_name.setText(name);
         holder.item_name.setTextSize(TypedValue.COMPLEX_UNIT_PX,itemTextSize);
         holder.item_contain.setLayoutParams(gridParams);
         holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -102,6 +103,7 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
                         notifyDataSetChanged();
                         break;
                     case ALBUM_TYPE:
+                        if (listerner!=null)listerner.onClick(name);
                         break;
                 }
             }
@@ -111,6 +113,10 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
     @Override
     public int getItemCount() {
         return entityList==null?0:entityList.size();
+    }
+
+    public void setListerner(MyClickItemListerner listerner) {
+        this.listerner = listerner;
     }
 
     class  ViewHolder extends RecyclerView.ViewHolder{
@@ -138,6 +144,14 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
         margin_size = windowWidth/35;
         itemTextSize = windowWidth/26;
         gridWidth = windowWidth/3;
+    }
+
+
+    private MyClickItemListerner listerner;
+
+
+    public interface MyClickItemListerner{
+        void onClick(String name);
     }
 
 

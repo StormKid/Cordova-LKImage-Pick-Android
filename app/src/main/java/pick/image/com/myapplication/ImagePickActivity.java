@@ -24,7 +24,7 @@ import java.util.HashSet;
  * @author ke_li
  * @date 2017/11/6
  */
-public class ImagePickActivity extends AppCompatActivity implements View.OnClickListener{
+public class ImagePickActivity extends AppCompatActivity implements View.OnClickListener,AlbumAdapter.MyClickItemListerner{
     /**
      * 确认名称
      */
@@ -79,7 +79,9 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
     private ArrayList<ItemPhotoEntity> itemPhotoEntities = new ArrayList<>();
 
     private final String[] projection = new String[]{ MediaStore.Images.Media.BUCKET_DISPLAY_NAME, MediaStore.Images.Media.DATA };
+    private final String[] iprojection = new String[]{ MediaStore.Images.Media._ID, MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.DATA };
     private AlbumAdapter albumAdapter;
+    private MyTask task;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,6 +138,9 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         file_list.setLayoutManager(manager);
         albumAdapter = new AlbumAdapter(this, itemPhotoEntities);
         file_list.setAdapter(albumAdapter);
+        albumAdapter.setListerner(this);
+        task = new MyTask();
+        task.execute(TYPE);
     }
 
     /**
@@ -159,21 +164,32 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
                     break;
                 case IMG_TYPE:
                     this.TYPE = ALBUM_TYPE;
+                    task = new MyTask();
+                    task.execute(TYPE);
                     break;
             }
         }
 
         if (v.getId()==title_ok.getId()){
-            MyTask task = new MyTask();
-            task.execute(TYPE);
         }
+    }
+
+    @Override
+    public void onClick(String name) {
+         TYPE = IMG_TYPE;
+        task = new MyTask();
+        task.setAlbum(name);
+        task.execute(TYPE);
     }
 
     /**
      * 后台默认执行Task来完成查找相册与查看相片
+     * 在调用此tast的时候必须要验证权限
      */
     private class  MyTask extends AsyncTask<String,Integer,ArrayList<ItemPhotoEntity>>{
 
+
+        private String album;
 
         @Override
         protected void onPreExecute() {
@@ -210,22 +226,13 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
                     ArrayList<ItemPhotoEntity> temp = new ArrayList<>(cursor.getCount());
                     HashSet<String> albumSet = new HashSet<>();
                     File file;
-
                     if (cursor.moveToLast()) {
                         do {
                             if (Thread.interrupted()) {
                                 break;
                             }
-
                             String album = cursor.getString(cursor.getColumnIndex(projection[0]));
                             String image = cursor.getString(cursor.getColumnIndex(projection[1]));
-
-                    /*
-                    It may happen that some image file paths are still present in cache,
-                    though image file does not exist. These last as long as media
-                    scanner is not run again. To avoid get such image file paths, check
-                    if image file exists.
-                     */
                             file = new File(image);
                             if (file.exists() && !albumSet.contains(album)) {
                                 ItemPhotoEntity itemPhotoEntity = new ItemPhotoEntity();
@@ -243,20 +250,61 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
                     itemPhotoEntities.addAll(temp);
                     break;
                 case IMG_TYPE:
+                    if (this.isCancelled()) {
+                        break;
+                    }
+                    Cursor icursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, iprojection,
+                            MediaStore.Images.Media.BUCKET_DISPLAY_NAME + " =?", new String[]{ album }, MediaStore.Images.Media.DATE_ADDED);
+
+                    if (icursor == null) {
+                        break;
+                    }
+                    ArrayList<ItemPhotoEntity> tempi = new ArrayList<>(icursor.getCount());
+
+                    if (icursor.moveToLast()) {
+                        do {
+                            if (this.isCancelled()) {
+                                break;
+                            }
+                            long id = icursor.getLong(icursor.getColumnIndex(iprojection[0]));
+                            String name = icursor.getString(icursor.getColumnIndex(iprojection[1]));
+                            String path = icursor.getString(icursor.getColumnIndex(iprojection[2]));
+                            file = new File(path);
+                            if (file.exists()) {
+                                ItemPhotoEntity photoEntity = new ItemPhotoEntity();
+                                photoEntity.setId(id);
+                                photoEntity.setName(name);
+                                photoEntity.setPath(path);
+                                photoEntity.setType(TAG);
+                                tempi.add(photoEntity);
+                            }
+
+                        } while (icursor.moveToPrevious());
+                    }
+                    icursor.close();
+
+                    itemPhotoEntities.clear();
+                    itemPhotoEntities.addAll(tempi);
+
                     break;
             }
             return itemPhotoEntities;
         }
+
+
+        public void setAlbum(String album) {
+            this.album = album;
+        }
     }
 
-
-
-
-
-
-
-
-
-
+    @Override
+    protected void onDestroy() {
+        if(task != null && task.isCancelled()){
+            //及时结束异步任务
+            task.cancel(true);
+            task = null;
+        }
+        super.onDestroy();
+    }
 }
 
