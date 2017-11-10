@@ -9,22 +9,24 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * 图片相册选择插件
+ *
  * @author ke_li
  * @date 2017/11/6
  */
-public class ImagePickActivity extends AppCompatActivity implements View.OnClickListener,AlbumAdapter.MyClickItemListerner{
+public class ImagePickActivity extends AppCompatActivity implements View.OnClickListener, AlbumAdapter.MyClickItemListerner {
     /**
      * 确认名称
      */
@@ -40,7 +42,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
     /**
      * 显示toolbar的颜色
      */
-    private  String BANNER_CORLOR;
+    private String BANNER_CORLOR;
     private TextView title_cancel;
     private TextView title_ok;
     private ViewGroup pick_main;
@@ -56,12 +58,12 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
     /**
      * 确定字体颜色
      */
-    private  String OK_COLOR;
+    private String OK_COLOR;
 
     /**
      * 查找相册
      */
-    private final String ALBUM_TYPE="ALBUM_TYPE";
+    private final String ALBUM_TYPE = "ALBUM_TYPE";
 
     /**
      * 查找相片
@@ -71,15 +73,20 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
     /**
      * 记录状态更新
      */
-    private  String TYPE;
+    private String TYPE;
 
     /**
      * 新建数组来固定显示相册或者是相片
      */
     private ArrayList<ItemPhotoEntity> itemPhotoEntities = new ArrayList<>();
 
-    private final String[] projection = new String[]{ MediaStore.Images.Media.BUCKET_DISPLAY_NAME, MediaStore.Images.Media.DATA };
-    private final String[] iprojection = new String[]{ MediaStore.Images.Media._ID, MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.DATA };
+    /**
+     * 限制能选择照相数量
+     */
+    private int LIMIT_NUM;
+
+    private final String[] projection = new String[]{MediaStore.Images.Media.BUCKET_DISPLAY_NAME, MediaStore.Images.Media.DATA};
+    private final String[] iprojection = new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.DATA};
     private AlbumAdapter albumAdapter;
     private MyTask task;
 
@@ -106,8 +113,9 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         OK_TEXT = intent.getStringExtra("ok_text");
         CANCEL_TEXT = intent.getStringExtra("cancel_text");
         CHCEK_IMG_RES = intent.getStringExtra("check_img_res");
-        BANNER_CORLOR= intent.getStringExtra("banner_color");
-        MANAGER_TITLE_TEXT_SIZE = intent.getIntExtra("title_text_size",9);
+        BANNER_CORLOR = intent.getStringExtra("banner_color");
+        MANAGER_TITLE_TEXT_SIZE = intent.getIntExtra("title_text_size", 9);
+        LIMIT_NUM = intent.getIntExtra("limit_num", 9);
         TYPE = ALBUM_TYPE;
     }
 
@@ -122,19 +130,19 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
 
 
     private void loadedView() {
-        OK_TEXT = TextUtils.isEmpty(OK_TEXT)?"确定":OK_TEXT;
-        CANCEL_TEXT = TextUtils.isEmpty(CANCEL_TEXT)?"返回":CANCEL_TEXT;
-        OK_COLOR = TextUtils.isEmpty(OK_COLOR)?"666666":OK_COLOR;
-        CANCEL_COLOR = TextUtils.isEmpty(CANCEL_COLOR)?"666666":CANCEL_COLOR;
-        BANNER_CORLOR = TextUtils.isEmpty(BANNER_CORLOR)?"ffffff":BANNER_CORLOR;
-        getTextPx(MANAGER_TITLE_TEXT_SIZE,title_cancel);
-        getTextPx(MANAGER_TITLE_TEXT_SIZE,title_ok);
+        OK_TEXT = TextUtils.isEmpty(OK_TEXT) ? "确定" : OK_TEXT;
+        CANCEL_TEXT = TextUtils.isEmpty(CANCEL_TEXT) ? "返回" : CANCEL_TEXT;
+        OK_COLOR = TextUtils.isEmpty(OK_COLOR) ? "666666" : OK_COLOR;
+        CANCEL_COLOR = TextUtils.isEmpty(CANCEL_COLOR) ? "666666" : CANCEL_COLOR;
+        BANNER_CORLOR = TextUtils.isEmpty(BANNER_CORLOR) ? "ffffff" : BANNER_CORLOR;
+        getTextPx(MANAGER_TITLE_TEXT_SIZE, title_cancel);
+        getTextPx(MANAGER_TITLE_TEXT_SIZE, title_ok);
         title_ok.setTextColor(Utils.getColorParcelable(OK_COLOR));
         title_cancel.setTextColor(Utils.getColorParcelable(CANCEL_COLOR));
         title_ok.setText(OK_TEXT);
         title_cancel.setText(CANCEL_TEXT);
         pick_main.setBackgroundColor(Utils.getColorParcelable(BANNER_CORLOR));
-        GridLayoutManager manager = new GridLayoutManager(this,3);
+        GridLayoutManager manager = new GridLayoutManager(this, 3);
         file_list.setLayoutManager(manager);
         albumAdapter = new AlbumAdapter(this, itemPhotoEntities);
         file_list.setAdapter(albumAdapter);
@@ -145,20 +153,22 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
 
     /**
      * 获取字体大小
+     *
      * @param point
      * @return
      */
-    private void getTextPx(int point, TextView textView){
+    private void getTextPx(int point, TextView textView) {
         int windowWidth = Utils.getWindowWidth(this);
-        int px = windowWidth*point/240;
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_PX,px);
+        int px = windowWidth * point / 240;
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, px);
     }
 
+    private List<ItemPhotoEntity> results = new ArrayList<>();
 
     @Override
     public void onClick(View v) {
-        if (v.getId()==title_cancel.getId()){
-            switch (TYPE){
+        if (v.getId() == title_cancel.getId()) {
+            switch (TYPE) {
                 case ALBUM_TYPE:
                     finish();
                     break;
@@ -170,23 +180,51 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
             }
         }
 
-        if (v.getId()==title_ok.getId()){
+        if (v.getId() == title_ok.getId()) {
+            switch (TYPE) {
+                case ALBUM_TYPE:
+                    Toast.makeText(this, "请进入相册选择您需要上传的图片", Toast.LENGTH_SHORT).show();
+                    break;
+                case IMG_TYPE:
+                    //获取相片URL
+                    setResults();
+                    break;
+            }
         }
     }
 
     @Override
     public void onClick(String name) {
-         TYPE = IMG_TYPE;
+        TYPE = IMG_TYPE;
         task = new MyTask();
         task.setAlbum(name);
         task.execute(TYPE);
     }
 
     /**
+     * 获取最终数据
+     */
+    private void setResults() {
+        if (results != null && results.size() > 0) results.clear();
+        for (ItemPhotoEntity entity :
+                itemPhotoEntities) {
+            if (entity.isChecked()) {
+                results.add(entity);
+            }
+        }
+        if (results.size()>LIMIT_NUM) {Toast.makeText(this,"您最多只能选择"+LIMIT_NUM+"张图片",Toast.LENGTH_SHORT).show();
+            return;
+        }else {//上传图片
+
+        }
+    }
+
+
+    /**
      * 后台默认执行Task来完成查找相册与查看相片
      * 在调用此tast的时候必须要验证权限
      */
-    private class  MyTask extends AsyncTask<String,Integer,ArrayList<ItemPhotoEntity>>{
+    private class MyTask extends AsyncTask<String, Integer, ArrayList<ItemPhotoEntity>> {
 
 
         private String album;
@@ -195,11 +233,12 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         protected void onPreExecute() {
             super.onPreExecute();
         }
+
         //执行完毕获取数据
         @Override
         protected void onPostExecute(ArrayList<ItemPhotoEntity> items) {
             super.onPostExecute(items);
-            Log.e("items",items.size()+"");
+
             albumAdapter.update(items);
         }
 
@@ -207,11 +246,12 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
         }
+
         //执行中判断string是相册还是查相片
         @Override
         protected ArrayList<ItemPhotoEntity> doInBackground(String... strings) {
             String TAG = strings[0];
-            switch (TAG){
+            switch (TAG) {
                 case ALBUM_TYPE:
                     if (this.isCancelled()) {
                         break;
@@ -254,7 +294,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
                         break;
                     }
                     Cursor icursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, iprojection,
-                            MediaStore.Images.Media.BUCKET_DISPLAY_NAME + " =?", new String[]{ album }, MediaStore.Images.Media.DATE_ADDED);
+                            MediaStore.Images.Media.BUCKET_DISPLAY_NAME + " =?", new String[]{album}, MediaStore.Images.Media.DATE_ADDED);
 
                     if (icursor == null) {
                         break;
@@ -299,7 +339,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     protected void onDestroy() {
-        if(task != null && task.isCancelled()){
+        if (task != null && task.isCancelled()) {
             //及时结束异步任务
             task.cancel(true);
             task = null;

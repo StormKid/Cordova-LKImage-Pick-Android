@@ -71,12 +71,14 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
         RelativeLayout.LayoutParams checkParams = new RelativeLayout.LayoutParams(checkWidth,checkHeight);
         RelativeLayout.LayoutParams gridParams = new RelativeLayout.LayoutParams(gridWidth, RelativeLayout.LayoutParams.WRAP_CONTENT);
         checkParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        itemParams.setMargins(margin_size,margin_size,margin_size,margin_size);
         checkParams.setMargins(0,margin_size,margin_size,0);
         holder.check_box.setLayoutParams(checkParams);
         holder.item_img.setLayoutParams(itemParams);
         if (type.equals(ALBUM_TYPE))
         holder.item_img.setImageResource(R.mipmap.album);
         else {
+            holder.item_img.setScaleType(ImageView.ScaleType.CENTER_CROP);
             Glide.with(context).load(path).into(holder.item_img);
         }
         holder.check_box.setImageResource(R.mipmap.choose);
@@ -99,7 +101,6 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
                             itemPhotoEntity.setChecked(tag);
                         }
                         entityList.set(position, itemPhotoEntity);
-
                         notifyDataSetChanged();
                         break;
                     case ALBUM_TYPE:
