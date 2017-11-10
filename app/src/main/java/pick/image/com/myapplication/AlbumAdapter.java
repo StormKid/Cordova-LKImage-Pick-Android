@@ -29,16 +29,31 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
     private int margin_size;
     private int itemTextSize;
     private List<ItemPhotoEntity> entityList;
+    private String type;
+    /**
+     * 查找相册
+     */
+    private final String ALBUM_TYPE="ALBUM_TYPE";
 
-    public AlbumAdapter(Context context, List<ItemPhotoEntity> entityList) {
+    /**
+     * 查找相片
+     */
+    private final String IMG_TYPE = "IMG_TYPE";
+    public AlbumAdapter(Context context, List<ItemPhotoEntity> entityList,String type) {
         this.context = context;
         this.entityList = entityList;
+        this.type = type;
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View inflate = LayoutInflater.from(context).inflate(R.layout.item_main,parent,false);
         return new ViewHolder(inflate);
+    }
+
+    public  void  update(List<ItemPhotoEntity> entityList){
+        this.entityList = entityList;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -57,24 +72,30 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
         holder.item_img.setLayoutParams(itemParams);
         holder.item_img.setImageResource(R.mipmap.ic_launcher);
         holder.check_box.setImageResource(R.mipmap.choose);
-        holder.item_name.setText("测试");
+        holder.item_name.setText(itemPhotoEntity.getName());
         holder.item_name.setTextSize(TypedValue.COMPLEX_UNIT_PX,itemTextSize);
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean tag = v.getTag()==null?false:(boolean) v.getTag();
-                if (tag) {
-                    tag = false;
-                    v.setTag(tag);
-                    itemPhotoEntity.setChecked(tag);
-                }else {
-                    tag = true;
-                    v.setTag(tag);
-                    itemPhotoEntity.setChecked(tag);
-                }
-                entityList.set(position,itemPhotoEntity);
+                switch (type) {
+                    case IMG_TYPE:
+                        boolean tag = v.getTag() == null ? false : (boolean) v.getTag();
+                        if (tag) {
+                            tag = false;
+                            v.setTag(tag);
+                            itemPhotoEntity.setChecked(tag);
+                        } else {
+                            tag = true;
+                            v.setTag(tag);
+                            itemPhotoEntity.setChecked(tag);
+                        }
+                        entityList.set(position, itemPhotoEntity);
 
-                notifyDataSetChanged();
+                        notifyDataSetChanged();
+                        break;
+                    case ALBUM_TYPE:
+                        break;
+                }
             }
         });
     }

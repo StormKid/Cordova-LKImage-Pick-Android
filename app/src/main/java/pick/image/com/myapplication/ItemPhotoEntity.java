@@ -8,17 +8,18 @@ import java.io.Serializable;
 
 public class ItemPhotoEntity implements Serializable{
 
-    private int Type ;// 0为相册 ，1 为相册list
+    private String Type ;
+    private long id;
     private String name;
-    private String url;
+    private String path;
     private boolean isChecked;
 
 
-    public int getType() {
+    public String getType() {
         return Type;
     }
 
-    public void setType(int type) {
+    public void setType(String type) {
         Type = type;
     }
 
@@ -30,13 +31,6 @@ public class ItemPhotoEntity implements Serializable{
         this.name = name;
     }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
 
     public boolean isChecked() {
         return isChecked;
@@ -44,5 +38,21 @@ public class ItemPhotoEntity implements Serializable{
 
     public void setChecked(boolean checked) {
         isChecked = checked;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 }

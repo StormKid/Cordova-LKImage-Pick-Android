@@ -1,17 +1,23 @@
 package pick.image.com.myapplication;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * 图片相册选择插件
@@ -51,10 +57,29 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
      * 确定字体颜色
      */
     private  String OK_COLOR;
+
     /**
-     *
+     * 查找相册
      */
-    private  int ITEM_SIZE;
+    private final String ALBUM_TYPE="ALBUM_TYPE";
+
+    /**
+     * 查找相片
+     */
+    private final String IMG_TYPE = "IMG_TYPE";
+
+    /**
+     * 记录状态更新
+     */
+    private  String TYPE;
+
+    /**
+     * 新建数组来固定显示相册或者是相片
+     */
+    private ArrayList<ItemPhotoEntity> itemPhotoEntities = new ArrayList<>();
+
+    private final String[] projection = new String[]{ MediaStore.Images.Media.BUCKET_DISPLAY_NAME, MediaStore.Images.Media.DATA };
+    private AlbumAdapter albumAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +106,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         CHCEK_IMG_RES = intent.getStringExtra("check_img_res");
         BANNER_CORLOR= intent.getStringExtra("banner_color");
         MANAGER_TITLE_TEXT_SIZE = intent.getIntExtra("title_text_size",9);
+        TYPE = ALBUM_TYPE;
     }
 
 
@@ -108,9 +134,8 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         pick_main.setBackgroundColor(Utils.getColorParcelable(BANNER_CORLOR));
         GridLayoutManager manager = new GridLayoutManager(this,3);
         file_list.setLayoutManager(manager);
-        ArrayList<ItemPhotoEntity> itemPhotoEntities = new ArrayList<>();
-        for (int i=0;i<40;i++) itemPhotoEntities.add(new ItemPhotoEntity());
-        file_list.setAdapter(new AlbumAdapter(this,itemPhotoEntities));
+        albumAdapter = new AlbumAdapter(this, itemPhotoEntities,ALBUM_TYPE);
+        file_list.setAdapter(albumAdapter);
     }
 
     /**
@@ -128,12 +153,111 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
     @Override
     public void onClick(View v) {
         if (v.getId()==title_cancel.getId()){
-            finish();
+            switch (TYPE){
+                case ALBUM_TYPE:
+                    finish();
+                    break;
+                case IMG_TYPE:
+                    this.TYPE = ALBUM_TYPE;
+                    break;
+            }
         }
 
         if (v.getId()==title_ok.getId()){
-
+            MyTask task = new MyTask();
+            task.execute(TYPE);
         }
     }
+
+    /**
+     * 后台默认执行Task来完成查找相册与查看相片
+     */
+    private class  MyTask extends AsyncTask<String,Integer,ArrayList<ItemPhotoEntity>>{
+
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+        //执行完毕获取数据
+        @Override
+        protected void onPostExecute(ArrayList<ItemPhotoEntity> items) {
+            super.onPostExecute(items);
+            Log.e("items",items.size()+"");
+            albumAdapter.update(items);
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+        }
+        //执行中判断string是相册还是查相片
+        @Override
+        protected ArrayList<ItemPhotoEntity> doInBackground(String... strings) {
+            String TAG = strings[0];
+            switch (TAG){
+                case ALBUM_TYPE:
+                    if (this.isCancelled()) {
+                        break;
+                    }
+                    Cursor cursor = getApplicationContext().getContentResolver()
+                            .query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection,
+                                    null, null, MediaStore.Images.Media.DATE_ADDED);
+                    if (cursor == null) {
+                        break;
+                    }
+
+                    ArrayList<ItemPhotoEntity> temp = new ArrayList<>(cursor.getCount());
+                    HashSet<String> albumSet = new HashSet<>();
+                    File file;
+
+                    if (cursor.moveToLast()) {
+                        do {
+                            if (Thread.interrupted()) {
+                                break;
+                            }
+
+                            String album = cursor.getString(cursor.getColumnIndex(projection[0]));
+                            String image = cursor.getString(cursor.getColumnIndex(projection[1]));
+
+                    /*
+                    It may happen that some image file paths are still present in cache,
+                    though image file does not exist. These last as long as media
+                    scanner is not run again. To avoid get such image file paths, check
+                    if image file exists.
+                     */
+                            file = new File(image);
+                            if (file.exists() && !albumSet.contains(album)) {
+                                ItemPhotoEntity itemPhotoEntity = new ItemPhotoEntity();
+                                itemPhotoEntity.setName(album);
+                                itemPhotoEntity.setPath(image);
+                                itemPhotoEntity.setType(TAG);
+                                temp.add(itemPhotoEntity);
+                                albumSet.add(album);
+                            }
+
+                        } while (cursor.moveToPrevious());
+                    }
+                    cursor.close();
+
+                    itemPhotoEntities.clear();
+                    itemPhotoEntities.addAll(temp);
+                    break;
+                case IMG_TYPE:
+                    break;
+            }
+            return itemPhotoEntities;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
 }
 
