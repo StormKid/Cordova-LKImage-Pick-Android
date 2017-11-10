@@ -134,7 +134,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         pick_main.setBackgroundColor(Utils.getColorParcelable(BANNER_CORLOR));
         GridLayoutManager manager = new GridLayoutManager(this,3);
         file_list.setLayoutManager(manager);
-        albumAdapter = new AlbumAdapter(this, itemPhotoEntities,ALBUM_TYPE);
+        albumAdapter = new AlbumAdapter(this, itemPhotoEntities);
         file_list.setAdapter(albumAdapter);
     }
 
@@ -230,7 +230,6 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
                             if (file.exists() && !albumSet.contains(album)) {
                                 ItemPhotoEntity itemPhotoEntity = new ItemPhotoEntity();
                                 itemPhotoEntity.setName(album);
-                                itemPhotoEntity.setPath(image);
                                 itemPhotoEntity.setType(TAG);
                                 temp.add(itemPhotoEntity);
                                 albumSet.add(album);
