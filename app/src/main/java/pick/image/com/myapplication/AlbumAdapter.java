@@ -2,6 +2,7 @@ package pick.image.com.myapplication;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,6 +31,7 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
     private int margin_size;
     private int itemTextSize;
     private List<ItemPhotoEntity> entityList;
+    private String checkRes;
     private int gridWidth;
     /**
      * 查找相册
@@ -40,9 +42,10 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
      * 查找相片
      */
     private final String IMG_TYPE = "IMG_TYPE";
-    public AlbumAdapter(Context context, List<ItemPhotoEntity> entityList) {
+    public AlbumAdapter(Context context, List<ItemPhotoEntity> entityList, String checkRes) {
         this.context = context;
         this.entityList = entityList;
+        this.checkRes = checkRes;
     }
 
     @Override
@@ -81,7 +84,9 @@ public  class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>
             holder.item_img.setScaleType(ImageView.ScaleType.CENTER_CROP);
             Glide.with(context).load(path).into(holder.item_img);
         }
+        if (TextUtils.isEmpty(checkRes))
         holder.check_box.setImageResource(R.mipmap.choose);
+        else Utils.putImg(context,checkRes,holder.check_box);
         holder.item_name.setText(name);
         holder.item_name.setTextSize(TypedValue.COMPLEX_UNIT_PX,itemTextSize);
         holder.item_contain.setLayoutParams(gridParams);

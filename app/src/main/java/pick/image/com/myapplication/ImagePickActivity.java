@@ -1,5 +1,6 @@
 package pick.image.com.myapplication;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
@@ -9,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -85,10 +87,28 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
      */
     private int LIMIT_NUM;
 
+    /**
+     * 是否直接请求网络
+     */
+    private boolean POST_IMGS;
+    /**
+     * 上传图片地址
+     */
+    private  String PATH_URL;
+
+    /**
+     * 上传图片其他参数
+     */
+    private Bundle params ;
+
+
+
     private final String[] projection = new String[]{MediaStore.Images.Media.BUCKET_DISPLAY_NAME, MediaStore.Images.Media.DATA};
     private final String[] iprojection = new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.DATA};
     private AlbumAdapter albumAdapter;
     private MyTask task;
+    private ProgressDialog progressDialog;
+    private NetTask netTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +118,17 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         initView();
         loadedView();
         initListner();
+        initNet();
 
+    }
+
+    /**
+     * 刷新网络参数,默认启用网络请求
+     */
+    private void initNet() {
+       params = getIntent().getExtras();
+       PATH_URL = getIntent().getStringExtra("path_url");
+       POST_IMGS = getIntent().getBooleanExtra("post_imgs",true);
     }
 
     private void initListner() {
@@ -121,6 +151,12 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
 
 
     private void initView() {
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMax(100);
+        progressDialog.setTitle("图片上传中...");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);// 设置水平进度条
+        progressDialog.setCancelable(true);// 设置是否可以通过点击Back键取消
+        progressDialog.setCanceledOnTouchOutside(false);// 设置在点击Dialog外是否取消Dialog进度条
         title_cancel = Utils.findViewById(TextView.class, this, R.id.title_cancel);
         title_ok = Utils.findViewById(TextView.class, this, R.id.title_ok);
         pick_main = Utils.findViewById(ViewGroup.class, this, R.id.pick_main);
@@ -135,6 +171,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         OK_COLOR = TextUtils.isEmpty(OK_COLOR) ? "666666" : OK_COLOR;
         CANCEL_COLOR = TextUtils.isEmpty(CANCEL_COLOR) ? "666666" : CANCEL_COLOR;
         BANNER_CORLOR = TextUtils.isEmpty(BANNER_CORLOR) ? "ffffff" : BANNER_CORLOR;
+        CHCEK_IMG_RES = TextUtils.isEmpty(CHCEK_IMG_RES)?"":CHCEK_IMG_RES;
         getTextPx(MANAGER_TITLE_TEXT_SIZE, title_cancel);
         getTextPx(MANAGER_TITLE_TEXT_SIZE, title_ok);
         title_ok.setTextColor(Utils.getColorParcelable(OK_COLOR));
@@ -144,7 +181,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         pick_main.setBackgroundColor(Utils.getColorParcelable(BANNER_CORLOR));
         GridLayoutManager manager = new GridLayoutManager(this, 3);
         file_list.setLayoutManager(manager);
-        albumAdapter = new AlbumAdapter(this, itemPhotoEntities);
+        albumAdapter = new AlbumAdapter(this, itemPhotoEntities,CHCEK_IMG_RES);
         file_list.setAdapter(albumAdapter);
         albumAdapter.setListerner(this);
         task = new MyTask();
@@ -163,7 +200,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, px);
     }
 
-    private List<ItemPhotoEntity> results = new ArrayList<>();
+    private List<String> results = new ArrayList<>();
 
     @Override
     public void onClick(View v) {
@@ -209,13 +246,14 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         for (ItemPhotoEntity entity :
                 itemPhotoEntities) {
             if (entity.isChecked()) {
-                results.add(entity);
+                results.add(entity.getPath());
             }
         }
         if (results.size()>LIMIT_NUM) {Toast.makeText(this,"您最多只能选择"+LIMIT_NUM+"张图片",Toast.LENGTH_SHORT).show();
             return;
         }else {//上传图片
-
+            netTask = new NetTask();
+            netTask.execute();
         }
     }
 
@@ -344,7 +382,48 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
             task.cancel(true);
             task = null;
         }
+        if (netTask !=null && netTask.isCancelled()){
+            netTask.cancel(true);
+            netTask = null;
+        }
         super.onDestroy();
     }
+
+    //////////////////////////////////////////网络请求来上传文件///////////////////////////////////////////////////
+
+    private  class  NetTask extends  AsyncTask<String,Integer,String>{
+
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            progressDialog.dismiss();
+            Log.e("http",s+"");
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            int progress = values[0];
+            progressDialog.setProgress(progress);
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String[] temp = new String[results.size()];
+            String[] paths = results.toArray(temp);
+            Log.e("http",paths.length+"");
+            PATH_URL = "http://172.16.32.128:8080/sns/app/uploads";
+            String rep = Utils.uploadFile(PATH_URL, paths);
+            return rep;
+        }
+    }
+
 }
 
