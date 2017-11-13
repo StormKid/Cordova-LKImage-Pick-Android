@@ -91,6 +91,7 @@ public class Utils {
      * @param filePaths 上传的文件路径数组
      * @return 服务器响应数据
      */
+
     public static String uploadFile(String actionURL, String[] filePaths) {
 
         String towHyphens = "--";   // 定义连接字符串
@@ -106,21 +107,23 @@ public class Utils {
             // 设置允许输出流输出数据到服务器
             urlConnection.setDoInput(true);
             // 设置不使用缓存
-            urlConnection.setUseCaches(false);
+            urlConnection.setUseCaches(true);
+            urlConnection.setDoInput(true);
             // 设置请求参数中的内容类型为multipart/form-data,设置请求内容的分割线为******
             urlConnection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
 
-            urlConnection.setConnectTimeout(20000);
+            urlConnection.setConnectTimeout(10000);
+            urlConnection.setRequestProperty("Accept-Encoding", "identity");
 
-
-
-            urlConnection.setRequestProperty("ACCESS_TOKEN","1cf9a73d-b543-4e66-8fa7-6dd4ac80a56e");
+            urlConnection.setRequestProperty("ACCESS_TOKEN","3763cd8a-ded3-466d-a963-ae9e43aedfa8");
 
 
             // 从连接对象中获取输出流
             OutputStream outputStream = urlConnection.getOutputStream();
             // 实例化数据输出流对象，将输出流传入
             DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+
+
 
             // 遍历文件路径的长度,将路径数组下所有路径的文件都写到输出流中
             for (int i = 0; i < filePaths.length; i++) {
@@ -131,9 +134,10 @@ public class Utils {
                 // 向数据输出流中写出分割符
                 dataOutputStream.writeBytes(towHyphens + boundary + end);
                 // 向数据输出流中写出文件参数名与文件名
-                dataOutputStream.writeBytes("Content-Disposition:form-data;name=file;filename=" + fileName + end);
+                dataOutputStream.writeBytes("Content-Disposition:form-data;name=files;filename=" + fileName + end);
                 // 向数据输出流中写出结束标志
                 dataOutputStream.writeBytes(end);
+
 
                 // 实例化文件输入流对象，将文件路径传入，用于将磁盘上的文件读入到内存中
                 FileInputStream fileInputStream = new FileInputStream(filePath);
@@ -159,34 +163,34 @@ public class Utils {
             // 刷新数据输出流
             dataOutputStream.flush();
             dataOutputStream.close();
-            // 从连接对象中获取字节输入流
-            int responseCode = urlConnection.getResponseCode();
-//            InputStream inputStream = urlConnection.getInputStream();
-//            // 实例化字符输入流对象，将字节流包装成字符流
-//            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-//            // 创建一个输入缓冲区对象，将要输入的字符流对象传入
-//            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 
-//            // 创建一个字符串对象，用来接收每次从输入缓冲区中读入的字符串
-//            String line;
-//            // 创建一个可变字符串对象，用来装载缓冲区对象的最终数据，使用字符串追加的方式，将响应的所有数据都保存在该对象中
-//            StringBuilder stringBuilder = new StringBuilder();
-//            // 使用循环逐行读取缓冲区的数据，每次循环读入一行字符串数据赋值给line字符串变量，直到读取的行为空时标识内容读取结束循环
-//            while ((line = bufferedReader.readLine()) != null) {
-//                // 将缓冲区读取到的数据追加到可变字符对象中
-//                stringBuilder.append(line);
-//            }
+            InputStream inputStream = urlConnection.getInputStream();
 
-//            // 依次关闭打开的输入流
-//            bufferedReader.close();
-//            inputStreamReader.close();
-//            inputStream.close();
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            // 创建一个输入缓冲区对象，将要输入的字符流对象传入
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+            // 创建一个字符串对象，用来接收每次从输入缓冲区中读入的字符串
+            String line;
+            // 创建一个可变字符串对象，用来装载缓冲区对象的最终数据，使用字符串追加的方式，将响应的所有数据都保存在该对象中
+            StringBuilder stringBuilder = new StringBuilder();
+            // 使用循环逐行读取缓冲区的数据，每次循环读入一行字符串数据赋值给line字符串变量，直到读取的行为空时标识内容读取结束循环
+            while ((line = bufferedReader.readLine()) != null) {
+                // 将缓冲区读取到的数据追加到可变字符对象中
+                stringBuilder.append(line);
+            }
+
+
+            // 依次关闭打开的输入流
+            bufferedReader.close();
+            inputStreamReader.close();
+            inputStream.close();
 
             // 依次关闭打开的输出流
             outputStream.close();
 
             // 返回服务器响应的数据
-            return responseCode+"";
+            return stringBuilder.toString()+"";
 
         } catch (IOException e) {
             e.printStackTrace();

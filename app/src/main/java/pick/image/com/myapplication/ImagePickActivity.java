@@ -155,7 +155,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         progressDialog.setMax(100);
         progressDialog.setTitle("图片上传中...");
         progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);// 设置水平进度条
-        progressDialog.setCancelable(true);// 设置是否可以通过点击Back键取消
+        progressDialog.setCancelable(false);// 设置是否可以通过点击Back键取消
         progressDialog.setCanceledOnTouchOutside(false);// 设置在点击Dialog外是否取消Dialog进度条
         title_cancel = Utils.findViewById(TextView.class, this, R.id.title_cancel);
         title_ok = Utils.findViewById(TextView.class, this, R.id.title_ok);
@@ -386,6 +386,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
             netTask.cancel(true);
             netTask = null;
         }
+
         super.onDestroy();
     }
 
@@ -404,6 +405,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             progressDialog.dismiss();
+            progressDialog.setProgress(0);
             Log.e("http",s+"");
         }
 
@@ -415,12 +417,28 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         }
 
         @Override
+        protected void onCancelled() {
+            super.onCancelled();
+            progressDialog.setProgress(0);
+        }
+
+        @Override
         protected String doInBackground(String... strings) {
+            progressDialog.setProgress(0);
             String[] temp = new String[results.size()];
             String[] paths = results.toArray(temp);
-            Log.e("http",paths.length+"");
             PATH_URL = "http://172.16.32.128:8080/sns/app/file/uploads";
             String rep = Utils.uploadFile(PATH_URL, paths);
+            int i = 0;
+            for (i = 0; i <= 100; i++) {
+                publishProgress(i); // 将会调用onProgressUpdate方法
+                try {
+                    Thread.sleep(20*paths.length);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
             return rep;
         }
     }
