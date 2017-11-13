@@ -112,7 +112,11 @@ public class Utils {
 
             urlConnection.setConnectTimeout(20000);
 
+
+
             urlConnection.setRequestProperty("ACCESS_TOKEN","1cf9a73d-b543-4e66-8fa7-6dd4ac80a56e");
+
+
             // 从连接对象中获取输出流
             OutputStream outputStream = urlConnection.getOutputStream();
             // 实例化数据输出流对象，将输出流传入
@@ -182,7 +186,7 @@ public class Utils {
             outputStream.close();
 
             // 返回服务器响应的数据
-            return urlConnection.getResponseCode()+"";
+            return responseCode+"";
 
         } catch (IOException e) {
             e.printStackTrace();

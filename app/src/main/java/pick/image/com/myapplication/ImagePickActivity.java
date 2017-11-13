@@ -419,7 +419,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
             String[] temp = new String[results.size()];
             String[] paths = results.toArray(temp);
             Log.e("http",paths.length+"");
-            PATH_URL = "http://172.16.32.128:8080/sns/app/files";
+            PATH_URL = "http://172.16.32.128:8080/sns/app/file/uploads";
             String rep = Utils.uploadFile(PATH_URL, paths);
             return rep;
         }
