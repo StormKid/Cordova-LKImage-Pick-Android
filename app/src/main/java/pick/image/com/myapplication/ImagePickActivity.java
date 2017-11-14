@@ -10,7 +10,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +19,6 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 
 /**
  * 图片相册选择插件
@@ -100,6 +98,10 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
      * 上传图片其他参数
      */
     private Bundle params ;
+    /**
+     * 上传
+     */
+    private  String FILE_KEY;
 
 
 
@@ -129,6 +131,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
        params = getIntent().getExtras();
        PATH_URL = getIntent().getStringExtra("path_url");
        POST_IMGS = getIntent().getBooleanExtra("post_imgs",true);
+       FILE_KEY = getIntent().getStringExtra("file_key");
     }
 
     private void initListner() {
@@ -200,7 +203,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, px);
     }
 
-    private List<String> results = new ArrayList<>();
+    private ArrayList<String> results = new ArrayList<>();
 
     @Override
     public void onClick(View v) {
@@ -252,8 +255,14 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         if (results.size()>LIMIT_NUM) {Toast.makeText(this,"您最多只能选择"+LIMIT_NUM+"张图片",Toast.LENGTH_SHORT).show();
             return;
         }else {//上传图片
-            netTask = new NetTask();
-            netTask.execute();
+           if (POST_IMGS){
+               netTask = new NetTask();
+               netTask.execute();
+           }else {
+               Bundle bundle = new Bundle();
+               bundle.putStringArrayList("path_list",results);
+               finish();
+           }
         }
     }
 
@@ -276,7 +285,6 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
         @Override
         protected void onPostExecute(ArrayList<ItemPhotoEntity> items) {
             super.onPostExecute(items);
-
             albumAdapter.update(items);
         }
 
@@ -406,7 +414,9 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
             super.onPostExecute(s);
             progressDialog.dismiss();
             progressDialog.setProgress(0);
-            Log.e("http",s+"");
+            Bundle bundle = new Bundle();
+            bundle.putString("result_rep",s);
+            finish();
         }
 
         @Override
@@ -427,8 +437,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
             progressDialog.setProgress(0);
             String[] temp = new String[results.size()];
             String[] paths = results.toArray(temp);
-            PATH_URL = "http://172.16.32.128:8080/sns/app/file/uploads";
-            String rep = Utils.uploadFile(PATH_URL, paths);
+            String rep = Utils.uploadFile(PATH_URL, paths,params,FILE_KEY);
             int i = 0;
             for (i = 0; i <= 100; i++) {
                 publishProgress(i); // 将会调用onProgressUpdate方法

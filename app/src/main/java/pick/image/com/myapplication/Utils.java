@@ -3,6 +3,7 @@ package pick.image.com.myapplication;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.support.annotation.IdRes;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -13,6 +14,7 @@ import com.bumptech.glide.Glide;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Set;
 
 /**
  * Created by ke_li on 2017/11/7.
@@ -92,11 +94,12 @@ public class Utils {
      * @return 服务器响应数据
      */
 
-    public static String uploadFile(String actionURL, String[] filePaths) {
+    public static String uploadFile(String actionURL, String[] filePaths,Bundle bundle,String fileKey) {
 
         String towHyphens = "--";   // 定义连接字符串
         String boundary = "******"; // 定义分界线字符串
         String end = "\r\n";    //定义结束换行字符串
+        if (TextUtils.isEmpty(fileKey)) fileKey = "files";
         try {
             // 创建URL对象
             URL url = new URL(actionURL);
@@ -115,8 +118,7 @@ public class Utils {
             urlConnection.setConnectTimeout(10000);
             urlConnection.setRequestProperty("Accept-Encoding", "identity");
 
-            urlConnection.setRequestProperty("ACCESS_TOKEN","3763cd8a-ded3-466d-a963-ae9e43aedfa8");
-
+            initUrlConnection(urlConnection,bundle);
 
             // 从连接对象中获取输出流
             OutputStream outputStream = urlConnection.getOutputStream();
@@ -134,7 +136,7 @@ public class Utils {
                 // 向数据输出流中写出分割符
                 dataOutputStream.writeBytes(towHyphens + boundary + end);
                 // 向数据输出流中写出文件参数名与文件名
-                dataOutputStream.writeBytes("Content-Disposition:form-data;name=files;filename=" + fileName + end);
+                dataOutputStream.writeBytes("Content-Disposition:form-data;name="+fileKey+";filename=" + fileName + end);
                 // 向数据输出流中写出结束标志
                 dataOutputStream.writeBytes(end);
 
@@ -197,4 +199,23 @@ public class Utils {
         }
         return null;
     }
+
+
+    /**
+     * 初始化请求信息
+     * @param urlConnection
+     * @param bundle
+     */
+    private  static  void  initUrlConnection(HttpURLConnection urlConnection , Bundle bundle){
+        if (null == bundle) return;
+        if (bundle.size()==0) return;
+        Set<String> keys = bundle.keySet();
+        for (String key :
+                keys) {
+            String value = bundle.getString(key);
+            urlConnection.setRequestProperty(key,value);
+        }
+    }
+
+
 }
