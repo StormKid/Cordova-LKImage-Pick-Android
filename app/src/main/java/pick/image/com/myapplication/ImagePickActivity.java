@@ -259,8 +259,10 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
                netTask = new NetTask();
                netTask.execute();
            }else {
+               Intent intent = new Intent();
                Bundle bundle = new Bundle();
                bundle.putStringArrayList("path_list",results);
+               intent.putExtra("path_bundle",bundle);
                finish();
            }
         }
@@ -414,8 +416,8 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
             super.onPostExecute(s);
             progressDialog.dismiss();
             progressDialog.setProgress(0);
-            Bundle bundle = new Bundle();
-            bundle.putString("result_rep",s);
+            Intent intent = new Intent();
+            intent.putExtra("result_rep",s);
             finish();
         }
 
