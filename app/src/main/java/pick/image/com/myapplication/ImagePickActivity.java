@@ -1,5 +1,6 @@
 package pick.image.com.myapplication;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
@@ -260,9 +261,8 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
                netTask.execute();
            }else {
                Intent intent = new Intent();
-               Bundle bundle = new Bundle();
-               bundle.putStringArrayList("path_list",results);
-               intent.putExtra("path_bundle",bundle);
+               intent.putStringArrayListExtra("path_list",results);
+               setResult(Activity.RESULT_OK,intent);
                finish();
            }
         }
@@ -418,6 +418,7 @@ public class ImagePickActivity extends AppCompatActivity implements View.OnClick
             progressDialog.setProgress(0);
             Intent intent = new Intent();
             intent.putExtra("result_rep",s);
+            setResult(Activity.RESULT_OK,intent);
             finish();
         }
 
